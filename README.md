@@ -104,3 +104,5 @@ Errors use consistent JSON: `{ "message": "...", "errors": { "field": "..." } }`
 - **Data isolation:** every lead query is scoped by `user`, so one user can never read or modify another's leads (returns 404).
 - **Indexes:** `{user,status}`, `{user,createdAt}`, `{user,name}`, and unique `{user,email}` to prevent duplicate leads per user.
 - **Search** is a case-insensitive, regex-escaped match on name (safe against regex injection).
+
+
