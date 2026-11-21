@@ -4,6 +4,16 @@ A small full-stack app for capturing and tracking sales leads.
 
 **Stack:** React (Vite) · Node.js + Express · MongoDB (Mongoose) · JWT auth · Jest + Supertest
 
+## Tech choices
+
+| Layer | Choice | Why |
+|---|---|---|
+| Frontend | React + Vite | Matches the suggested stack; fast dev server and tiny production build. Plain CSS keeps dependencies minimal. |
+| Backend | Node.js + Express 4 | Simple, widely understood REST layer; easy to read and test. |
+| Database | MongoDB + Mongoose | Matches the suggested stack; Mongoose gives schema validation, enums and indexes. |
+| Auth | JWT + bcryptjs | Stateless auth, so the API scales without session storage. |
+| Tests | Jest + Supertest + mongodb-memory-server | API tests run against an in-memory DB, no setup needed. |
+
 ## Features
 
 **Core**
@@ -97,6 +107,18 @@ All `/api/leads` routes require `Authorization: Bearer <token>`.
 Errors use consistent JSON: `{ "message": "...", "errors": { "field": "..." } }` with status
 400 (validation / bad id), 401 (auth), 404 (not found), 409 (duplicate email).
 
+## Assumptions
+
+- **Required vs optional fields:** name, email, source and status are required; phone and company are optional (validated only when provided).
+- **Sources** are a fixed list: Website, Referral, LinkedIn, Cold Call, Email Campaign, Event, Other.
+- **New leads default to status "New".**
+- **Email is unique per user**, not globally, so two users can each track the same contact.
+- **Search** matches on name only; **status filter** is an exact match. Both can be combined.
+- **Phone numbers** are validated loosely (7-20 characters, digits plus `+ - ( )` and spaces) because formats vary by country.
+- **Auth is email + password only.** The JWT is kept in `localStorage` and expires after 7 days.
+- **Deletes are permanent** (no soft delete or undo).
+- **Page size is 10**, and the API caps `limit` at 100.
+
 ## Design decisions
 
 - **Validation** lives in one backend module and is mirrored on the frontend for instant feedback; the backend is always the source of truth.
@@ -104,3 +126,13 @@ Errors use consistent JSON: `{ "message": "...", "errors": { "field": "..." } }`
 - **Data isolation:** every lead query is scoped by `user`, so one user can never read or modify another's leads (returns 404).
 - **Indexes:** `{user,status}`, `{user,createdAt}`, `{user,name}`, and unique `{user,email}` to prevent duplicate leads per user.
 - **Search** is a case-insensitive, regex-escaped match on name (safe against regex injection).
+
+## What I would improve with more time
+
+- **Security:** move the JWT to an httpOnly cookie, add rate limiting on login/signup, add `helmet`, and add password reset and email verification.
+- **Search:** extend search to email and company, and use a MongoDB text index instead of a regex for better performance on large datasets.
+- **Features:** soft delete with undo, CSV import/export, notes and activity history per lead, assignees, and follow-up reminders.
+- **Frontend quality:** TypeScript, React Query for caching and optimistic updates, component tests (React Testing Library) and an end-to-end test (Playwright).
+- **Backend quality:** schema validation with Zod or Joi, request logging, OpenAPI/Swagger docs, and a CI pipeline running tests and linting.
+- **UX:** toast stacking, keyboard shortcuts, saved filters, bulk actions, and a dark mode.
+- **Ops:** Dockerfile and docker-compose (app + MongoDB), and a documented live deployment.
