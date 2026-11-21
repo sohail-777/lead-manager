@@ -38,5 +38,3 @@ export const api = {
   updateLead: (id, body) => request(`/leads/${id}`, { method: 'PUT', body }),
   deleteLead: (id) => request(`/leads/${id}`, { method: 'DELETE' }),
 };
-
-
